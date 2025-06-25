@@ -1,3 +1,5 @@
 .pytest_cache/
 tests/__pycache__/
 tests/pageobjects/__pycache__
+test-results/
+state.json
