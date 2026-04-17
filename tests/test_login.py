@@ -6,7 +6,6 @@ from pageobjects.LoginPage import LoginPage
 def before_each_after_each(page: Page):
     page.goto("/")
     yield
-    # logout? probs not necessary here, new browser is opened each time
 
 def test_navigation_to_login_page(page: Page):
     expect(page).to_have_url("https://www.saucedemo.com/")
@@ -60,5 +59,3 @@ def test_login_with_locked_out_user_credentials(page: Page):
     loginPage.login("locked_out_user", "secret_sauce")
     expect(page).to_have_url("https://www.saucedemo.com/")
     expect(loginPage.login_error_message).to_have_text("Epic sadface: Sorry, this user has been locked out.")
-    # this is mainly design, better separately, the login details are not removed by clicking it anyway
-    # expect(page.locator("[data-test='error-button']")).to_be_enabled()
