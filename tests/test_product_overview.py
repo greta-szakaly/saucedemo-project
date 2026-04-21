@@ -50,3 +50,21 @@ def test_all_product_names_are_clickable(authenticated_page):
         expect(authenticated_page.get_by_role("button", name="Back to products")).to_be_visible()
 
         authenticated_page.goto("https://www.saucedemo.com/inventory.html")
+
+def test_sort_by_name_ascending(authenticated_page):
+    productNamesAscending = sorted(EXPECTED_PRODUCTS)
+    productNames = authenticated_page.get_by_test_id("inventory-item-name")
+
+    authenticated_page.get_by_test_id("product-sort-container").select_option("az")
+
+    for i in range(productNames.count()):
+        expect(productNames.nth(i)).to_have_text(productNamesAscending[i])
+
+def test_sort_by_name_descending(authenticated_page):
+    productNamesDescending = sorted(EXPECTED_PRODUCTS, reverse=True)
+    productNames = authenticated_page.get_by_test_id("inventory-item-name")
+
+    authenticated_page.get_by_test_id("product-sort-container").select_option("za")
+
+    for i in range(productNames.count()):
+        expect(productNames.nth(i)).to_have_text(productNamesDescending[i])

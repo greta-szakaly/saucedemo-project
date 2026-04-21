@@ -6,8 +6,8 @@
 4. All product names are clickable
 
 ## Sorting functionality
-1. Sort by Name (A to Z)
-2. Sort by Name (Z to A)
-3. Sort by Price (low to high)
-4. Sort by Price (high to low)
+1. Sort by Name ascending (A to Z)
+2. Sort by Name descending (Z to A)
+3. Sort by Price ascending (low to high)
+4. Sort by Price descending (high to low)
 5. Sort with items in cart
