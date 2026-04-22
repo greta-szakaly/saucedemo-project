@@ -1,5 +1,9 @@
 import pytest
 from playwright.sync_api import Page, expect
+from models.Product import Product
+from pageobjects.ProductsPage import ProductsPage
+from pageobjects.ProductDetailPage import ProductDetailPage
+from components.ProductComponent import ProductComponent
 
 @pytest.fixture
 def authenticated_page(authenticated_context):
@@ -9,26 +13,32 @@ def authenticated_page(authenticated_context):
     page.close()
 
 def test_product_information_is_consistent(authenticated_page):
-    products = authenticated_page.get_by_test_id("inventory-item")
+    productsPage = ProductsPage(authenticated_page)
+    productDetailPage = ProductDetailPage(authenticated_page)
 
-    for product in products.all():
-        productName = product.get_by_test_id("inventory-item-name").text_content()
-        productDescription = product.get_by_test_id("inventory-item-desc").text_content()
-        productPrice = product.get_by_test_id("inventory-item-price").text_content()
+    productComponents = productsPage.get_product_components()
+
+    for productComponent in productComponents:
+        currentProduct = productComponent.to_model()
         
-        product.get_by_role("img").click()
+        productComponent.click_image()
 
-        expect(authenticated_page.get_by_test_id("inventory-item-name")).to_have_text(productName)
-        expect(authenticated_page.get_by_test_id("inventory-item-desc")).to_have_text(productDescription)
-        expect(authenticated_page.get_by_test_id("inventory-item-price")).to_have_text(productPrice)
+        productDetailComponent = productDetailPage.get_product_detail_component()
 
-        authenticated_page.goto("https://www.saucedemo.com/inventory.html")
+        expect(productDetailComponent.name_locator).to_have_text(currentProduct.name)
+        expect(productDetailComponent.descripion_locator).to_have_text(currentProduct.description)
+        expect(productDetailComponent.price_locator).to_have_text("$" + str(currentProduct.price))
+
+        productsPage.goto()
 
 def test_back_to_products_navigation(authenticated_page):
-    authenticated_page.get_by_test_id("inventory-item-name").nth(0).click()
+    productsPage = ProductsPage(authenticated_page)
+    productDetailPage = ProductDetailPage(authenticated_page)
 
-    backToProductsButton = authenticated_page.get_by_role("button", name="Back to products")
-    expect(backToProductsButton).to_be_enabled()
+    productComponents = productsPage.get_product_components()
+    productComponents[0].click_image()
 
-    backToProductsButton.click()
+    expect(productDetailPage.back_to_products_button_locator).to_be_enabled()
+
+    productDetailPage.navigate_back_to_products()
     expect(authenticated_page).to_have_url("https://www.saucedemo.com/inventory.html")

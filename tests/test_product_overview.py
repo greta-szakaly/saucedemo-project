@@ -1,14 +1,9 @@
 import pytest
 from playwright.sync_api import Page, expect
-
-EXPECTED_PRODUCTS = [
-    "Sauce Labs Backpack",
-    "Sauce Labs Bike Light",
-    "Sauce Labs Bolt T-Shirt",
-    "Sauce Labs Fleece Jacket",
-    "Sauce Labs Onesie",
-    "Test.allTheThings() T-Shirt (Red)"
-]
+from data.products import ALL_PRODUCTS
+from pageobjects.ProductsPage import ProductsPage
+from pageobjects.ProductDetailPage import ProductDetailPage
+from components.ProductComponent import ProductComponent
 
 @pytest.fixture
 def authenticated_page(authenticated_context):
@@ -18,53 +13,70 @@ def authenticated_page(authenticated_context):
     page.close()
 
 def test_product_list_is_visible(authenticated_page):
-    products = authenticated_page.get_by_test_id("inventory-item")
+    productsPage = ProductsPage(authenticated_page)
 
-    expect(products).to_have_count(6)
+    productLocators = productsPage.product_locators
 
-    for product in products.all():
-        expect(product).to_be_visible()
+    expect(productLocators).to_have_count(6)
+
+    for productLocator in productLocators.all():
+        expect(productLocator).to_be_visible()
         
 def test_all_products_are_present(authenticated_page):
-    products = authenticated_page.get_by_test_id("inventory-item")
+    productsPage = ProductsPage(authenticated_page)
+
+    productComponents = productsPage.get_product_components()
     
-    for i in range(products.count()):
-        product = products.nth(i)
-        expect(product.get_by_test_id("inventory-item-name")).to_have_text(EXPECTED_PRODUCTS[i])
+    for i in range(len(productComponents)):
+        productComponent = productComponents[i]
+        expect(productComponent.name_locator).to_have_text(ALL_PRODUCTS[i].name)
 
 def test_all_product_images_are_clickable(authenticated_page):
-    products = authenticated_page.get_by_test_id("inventory-item")
+    productsPage = ProductsPage(authenticated_page)
+    productDetailPage = ProductDetailPage(authenticated_page)
 
-    for product in products.all():
-        productImage = product.get_by_role("img")
-        productImage.click()
-        expect(authenticated_page.get_by_role("button", name="Back to products")).to_be_visible()
+    productComponents = productsPage.get_product_components()
 
-        authenticated_page.goto("https://www.saucedemo.com/inventory.html")
+    for productComponent in productComponents:
+        productComponent.click_image()
+
+        expect(productDetailPage.back_to_products_button_locator).to_be_visible()
+
+        productsPage.goto()
 
 def test_all_product_names_are_clickable(authenticated_page):
-    productNames = authenticated_page.get_by_test_id("inventory-item-name")
+    productsPage = ProductsPage(authenticated_page)
+    productDetailPage = ProductDetailPage(authenticated_page)
 
-    for productName in productNames.all():
-        productName.click()
-        expect(authenticated_page.get_by_role("button", name="Back to products")).to_be_visible()
+    productNameLocators = [productComponent.name_locator for productComponent in productsPage.get_product_components()]
 
-        authenticated_page.goto("https://www.saucedemo.com/inventory.html")
+    for productNameLocator in productNameLocators:
+        productNameLocator.click()
 
+        expect(productDetailPage.back_to_products_button_locator).to_be_visible()
+
+        productsPage.goto()
+
+# TODO: add functionality to ProductsPage (sort)
 def test_sort_by_name_ascending(authenticated_page):
-    productNamesAscending = sorted(EXPECTED_PRODUCTS)
-    productNames = authenticated_page.get_by_test_id("inventory-item-name")
+    productsPage = ProductsPage(authenticated_page)
 
-    authenticated_page.get_by_test_id("product-sort-container").select_option("az")
+    expectedProductNamesAscending = sorted([item.name for item in ALL_PRODUCTS])
+    productNameLocators = [productComponent.name_locator for productComponent in productsPage.get_product_components()]
 
-    for i in range(productNames.count()):
-        expect(productNames.nth(i)).to_have_text(productNamesAscending[i])
+    productsPage.sort_product_list("az")
 
+    for i in range(len(productNameLocators)):
+        expect(productNameLocators[i]).to_have_text(expectedProductNamesAscending[i])
+
+# TODO: add functionality to ProductsPage (sort)
 def test_sort_by_name_descending(authenticated_page):
-    productNamesDescending = sorted(EXPECTED_PRODUCTS, reverse=True)
-    productNames = authenticated_page.get_by_test_id("inventory-item-name")
+    productsPage = ProductsPage(authenticated_page)
 
-    authenticated_page.get_by_test_id("product-sort-container").select_option("za")
+    expectedProductNamesDescending = sorted([item.name for item in ALL_PRODUCTS], reverse=True)
+    productNameLocators = [productComponent.name_locator for productComponent in productsPage.get_product_components()]
 
-    for i in range(productNames.count()):
-        expect(productNames.nth(i)).to_have_text(productNamesDescending[i])
+    productsPage.sort_product_list("za")
+
+    for i in range(len(productNameLocators)):
+        expect(productNameLocators[i]).to_have_text(expectedProductNamesDescending[i])
