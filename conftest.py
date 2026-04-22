@@ -1,5 +1,12 @@
 import pytest
+from playwright.sync_api import sync_playwright
 from pageobjects.LoginPage import LoginPage
+
+@pytest.fixture(scope="session")
+def playwright():
+    with sync_playwright() as p:
+        p.selectors.set_test_id_attribute("data-test")
+        yield p
 
 @pytest.fixture(scope="session")
 def ensure_logged_in_state(browser):
