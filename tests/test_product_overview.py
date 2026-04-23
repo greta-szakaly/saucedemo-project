@@ -57,26 +57,50 @@ def test_all_product_names_are_clickable(authenticated_page):
 
         productsPage.goto()
 
-# TODO: add functionality to ProductsPage (sort)
 def test_sort_by_name_ascending(authenticated_page):
     productsPage = ProductsPage(authenticated_page)
 
     expectedProductNamesAscending = sorted([item.name for item in ALL_PRODUCTS])
-    productNameLocators = [productComponent.name_locator for productComponent in productsPage.get_product_components()]
 
     productsPage.sort_product_list("az")
+
+    productNameLocators = [productComponent.name_locator for productComponent in productsPage.get_product_components()]
 
     for i in range(len(productNameLocators)):
         expect(productNameLocators[i]).to_have_text(expectedProductNamesAscending[i])
 
-# TODO: add functionality to ProductsPage (sort)
 def test_sort_by_name_descending(authenticated_page):
     productsPage = ProductsPage(authenticated_page)
 
     expectedProductNamesDescending = sorted([item.name for item in ALL_PRODUCTS], reverse=True)
-    productNameLocators = [productComponent.name_locator for productComponent in productsPage.get_product_components()]
 
     productsPage.sort_product_list("za")
 
+    productNameLocators = [productComponent.name_locator for productComponent in productsPage.get_product_components()]
+
     for i in range(len(productNameLocators)):
         expect(productNameLocators[i]).to_have_text(expectedProductNamesDescending[i])
+
+def test_sort_by_price_ascending(authenticated_page):
+    productsPage = ProductsPage(authenticated_page)
+
+    expectedProductPricesAscending = sorted([item.price for item in ALL_PRODUCTS])
+
+    productsPage.sort_product_list("lohi")
+
+    productPriceLocators = [productComponent.price_locator for productComponent in productsPage.get_product_components()]
+
+    for i in range(len(productPriceLocators)):
+        expect(productPriceLocators[i]).to_have_text("$" + str(expectedProductPricesAscending[i]))
+
+def test_sort_by_price_descending(authenticated_page):
+    productsPage = ProductsPage(authenticated_page)
+
+    expectedProductPricesDescending = sorted([item.price for item in ALL_PRODUCTS], reverse=True)
+
+    productsPage.sort_product_list("hilo")
+
+    productPriceLocators = [productComponent.price_locator for productComponent in productsPage.get_product_components()]
+
+    for i in range(len(productPriceLocators)):
+        expect(productPriceLocators[i]).to_have_text("$" + str(expectedProductPricesDescending[i]))
