@@ -16,7 +16,7 @@ def test_product_information_is_consistent(authenticated_page):
     productsPage = ProductsPage(authenticated_page)
     productDetailPage = ProductDetailPage(authenticated_page)
 
-    productComponents = productsPage.get_product_components()
+    productComponents = productsPage.get_all_product_components()
 
     for productComponent in productComponents:
         currentProduct = productComponent.to_model()
@@ -35,7 +35,7 @@ def test_back_to_products_navigation(authenticated_page):
     productsPage = ProductsPage(authenticated_page)
     productDetailPage = ProductDetailPage(authenticated_page)
 
-    productComponents = productsPage.get_product_components()
+    productComponents = productsPage.get_all_product_components()
     productComponents[0].click_image()
 
     expect(productDetailPage.back_to_products_button_locator).to_be_enabled()

@@ -1,5 +1,8 @@
 import pytest
 from playwright.sync_api import Page, expect
+from pageobjects.ProductsPage import ProductsPage
+from pageobjects.ProductDetailPage import ProductDetailPage
+from components.ProductComponent import ProductComponent
 
 @pytest.fixture
 def authenticated_page(authenticated_context):
@@ -9,60 +12,72 @@ def authenticated_page(authenticated_context):
     page.close()
 
 def test_add_one_product_to_cart_from_overview(authenticated_page):
-    cartBadge = authenticated_page.get_by_test_id("shopping-cart-badge")
-    #addedProductAmount = cartBadge.text_content()
+    productsPage = ProductsPage(authenticated_page)
 
-    firstProduct = authenticated_page.get_by_test_id("inventory-item").nth(0)
-    firstProductAddToCartButton = firstProduct.get_by_role("button", name="Add to cart")
-    firstProductRemoveButton = firstProduct.get_by_role("button", name="Remove")
+    firstProductComponent = productsPage.get_all_product_components()[0]
 
-    expect(firstProductAddToCartButton).to_be_enabled()
+    expect(firstProductComponent.add_to_cart_button_locator).to_be_enabled()
     
-    firstProductAddToCartButton.click()
-    #addedProductAmount += 1
+    firstProductComponent.add_to_cart()
     
-    expect(firstProductRemoveButton).to_be_enabled()
-    expect(cartBadge).to_have_text("1")
+    expect(firstProductComponent.remove_from_cart_button_locator).to_be_enabled()
+    expect(productsPage.cart_badge_locator).to_have_text("1")
 
 def test_add_one_product_to_cart_from_detail(authenticated_page):
-    addToCartButton = authenticated_page.get_by_role("button", name="Add to cart")
-    removeButton = authenticated_page.get_by_role("button", name="Remove")
-    cartBadge = authenticated_page.get_by_test_id("shopping-cart-badge")
+    productsPage = ProductsPage(authenticated_page)
+    productDetailPage = ProductDetailPage(authenticated_page)
 
-    authenticated_page.get_by_test_id("inventory-item-name").nth(0).click()
-    expect(addToCartButton).to_be_enabled()
+    productsPage.get_all_product_components()[0].click_image()
 
-    addToCartButton.click()
-    expect(cartBadge).to_have_text("1")
-    expect(removeButton).to_be_enabled()
+    productComponent = productDetailPage.get_product_detail_component()
+
+    expect(productComponent.add_to_cart_button_locator).to_be_enabled()
+
+    productComponent.add_to_cart()
+
+    expect(productDetailPage.cart_badge_locator).to_have_text("1")
+    expect(productComponent.remove_from_cart_button_locator).to_be_enabled()
     
 def test_add_multiple_products_to_cart_from_overview(authenticated_page):
-    cartBadge = authenticated_page.get_by_test_id("shopping-cart-badge")
-    products = authenticated_page.get_by_test_id("inventory-item")
+    productsPage = ProductsPage(authenticated_page)
 
-    for product in products.all():
-        product.get_by_role("button", name="Add to cart").click()
-        expect(product.get_by_role("button", name="Remove")).to_be_enabled()
+    productComponents = productsPage.get_all_product_components()
 
-    expect(cartBadge).to_have_text("6")
+    for productComponent in productComponents:
+        productComponent.add_to_cart()
+        expect(productComponent.remove_from_cart_button_locator).to_be_enabled()
+
+    expect(productsPage.cart_badge_locator).to_have_text("6")
 
 def test_remove_one_product_from_cart_from_overview(authenticated_page):
+    productsPage = ProductsPage(authenticated_page)
+
     authenticated_page.evaluate("localStorage.setItem('cart-contents', '[0]')")
     authenticated_page.reload()
 
-    cartBadge = authenticated_page.get_by_test_id("shopping-cart-badge")
-    expect(cartBadge).to_have_text("1")
+    while productsPage.get_added_product_components():
+        productsPage.get_added_product_components()[0].remove_from_cart()
 
-    authenticated_page.get_by_role("button", name="Remove").click()
-    expect(cartBadge).to_have_count(0) # expect this element to not exist
-
+    expect(productsPage.cart_badge_locator).to_have_count(0) # expect this element to not exist
 
 def test_remove_one_product_from_cart_from_detail(authenticated_page):
+    productDetailPage = ProductDetailPage(authenticated_page)
+
     authenticated_page.evaluate("localStorage.setItem('cart-contents', '[0]')")
     authenticated_page.goto("https://www.saucedemo.com/inventory-item.html?id=0")
 
-    cartBadge = authenticated_page.get_by_test_id("shopping-cart-badge")
-    expect(cartBadge).to_have_text("1")
+    productComponent = productDetailPage.get_product_detail_component()
+    productComponent.remove_from_cart()
 
-    authenticated_page.get_by_role("button", name="Remove").click()
-    expect(cartBadge).to_have_count(0) # expect this element to not exist
+    expect(productDetailPage.cart_badge_locator).to_have_count(0) # expect this element to not exist
+
+def test_remove_multiple_products_from_cart_from_overview(authenticated_page):
+    productsPage = ProductsPage(authenticated_page)
+
+    authenticated_page.evaluate("localStorage.setItem('cart-contents', '[0, 4]')")
+    authenticated_page.reload()
+
+    while productsPage.get_added_product_components():
+        productsPage.get_added_product_components()[0].remove_from_cart()
+
+    expect(productsPage.cart_badge_locator).to_have_count(0) # expect this element to not exist

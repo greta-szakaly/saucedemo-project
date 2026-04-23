@@ -7,3 +7,4 @@
 ## Remove from cart
 1. Remove one product from cart from overview
 2. Remove one product from cart from detail
+2. Remove multiple products from cart from overview
